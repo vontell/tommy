@@ -6,6 +6,11 @@
     text-align: center;
     border-radius: 25px;
     cursor: pointer;
+    /*transition: width 2s; /* For expanding */
+}
+
+.opened-button {
+    width: 300px !important;
 }
 
 #tommy-main-button:hover {

@@ -78,10 +78,19 @@
     
     Tommy.prototype.listen = function(timeLimit) {
         if (tommy.settings.debug) console.log("Starting listening process")
+        
+        // Animations and such
+        var button = document.getElementById("tommy-main-button")
+        button.classList.add("opened-button")
+        button.onclick = tommy.deafen
+        
         tommy.speechService.start()
     }
     
     Tommy.prototype.deafen = function(timeDelay) {
+        var button = document.getElementById("tommy-main-button")
+        button.classList.remove("opened-button")
+        button.onclick = tommy.listen
         if (tommy.settings.debug) console.log("Stopping listening process")
         tommy.speechService.stop()
     }
@@ -166,7 +175,8 @@
         
         var stylesheets = [
             'https://fonts.googleapis.com/icon?family=Material+Icons',
-            'https://fonts.googleapis.com/css?family=Open+Sans'
+            'https://fonts.googleapis.com/css?family=Open+Sans',
+            'https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css'
         ]
         
         var head  = document.getElementsByTagName('head')[0]
@@ -184,8 +194,6 @@
     
     function _positionTommy() {
         tommy.container.style.position = 'fixed'
-        tommy.container.style.height = '50px'
-        tommy.container.style.width = '50px'
         tommy.container.style.bottom = '0'
         tommy.container.style.right = '0'
         tommy.container.style.marginBottom = '16px'
@@ -202,7 +210,7 @@
         // Build the main button to open / start listening
         var tommyButton = document.createElement("div")
         var tommyIcon = document.createElement("i")
-        tommyIcon.classList = "material-icons noselect"
+        tommyIcon.className = "material-icons noselect"
         tommyIcon.innerHTML = '&#xE39F;'
         tommyButton.id = "tommy-main-button"
         tommyIcon.id = "tommy-main-button-icon"
