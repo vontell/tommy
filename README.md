@@ -107,4 +107,28 @@ var defaultSetting = {
 
 ## Always-included Definitions
 
-Back
+At the moment, there are no automatically-included definitions, such as a suggestion that appears to visit the Tommy home page, or make a donation. This may arise in the future, however.
+
+## Included Resources
+
+One of the design goals is to minimize the number of dependencies needed for the Tommy library. However, some items such as fonts and icons needed to be included. Below is a list of dependencies that are attached to your HTML pages when Tommy is loaded:
+
+* `https://fonts.googleapis.com/icon?family=Material+Icons`
+* `https://fonts.googleapis.com/css?family=Open+Sans`
+* `https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css`
+
+## Contributors
+
+A huge thank-you to the developers, contributors, and donators of the Tommy project!
+
+### Primary Developers
+
+* [Aaron Vontell](http://avontell.com) - Creator and project lead
+
+### Contributors
+
+* [Chris Wilson](https://github.com/cwilso/volume-meter) - Indirect contributor, as we used his volume-meter project for audio visualization
+
+### Donators
+
+No current donators. Please consider donating to the project!
