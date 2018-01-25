@@ -163,7 +163,7 @@ function volumeAudioProcess( event ) {
         _buildTommyHTML()
         _buildVolumeListener()
         
-        if (tommy.settings.debug) console.log("Tommy setup finished");
+        if (tommy.settings.debug) console.log("Tommy setup finished")
         
     }
     
@@ -220,21 +220,20 @@ function volumeAudioProcess( event ) {
             buttonColor: e("buttonColor") ? s.buttonColor : "#3F51B5",  // Color of the Tommy Button
             iconColor: e("iconColor") ? s.iconColor : "#FFFFFF",        // Color of the Tommy Icon
             iconRecordingColor: e("iconRecordingColor") ? s.iconRecordingColor : "#F44336", // Color of the Tommy Icon when recording
-            visualizerColor: e("visualizerColor") ? s.visualizerColor : "#7986CB", // Color of the Tommy Icon when recording
-            panelTitle: e("panelTitle") ? s.panelTitle : "Welcome to Tommy", // Color of the Tommy Icon when recording
+            visualizerColor: e("visualizerColor") ? s.visualizerColor : "#7986CB", // Color of the audio volume visualizer behind the Tommy icon when recording
+            panelTitle: e("panelTitle") ? s.panelTitle : "Welcome to Tommy", // Title to show at the top of the Tommy suggestion panel
             font: e("font") ? s.font : "Open Sans",                     // Font family for Tommy
             debug: e("debug") ? s.debug : true,                        // Console debugging for Tommy
             disabled: e("disabled") ? s.disabled : false,               // Tommy is shown but not usable
             hidden: e("hidden") ? s.hidden : false,                     // Tommy is completely hidden
             preClick: e("preClick") ? s.preClick : undefined,           // Function that gets called first when Tommy is clicked
-            clickOutside: e("clickOutside") ? s.clickOutside : undefined, // Function that gets called when Tommy is done being interacted with
             fullscreen: e("fullscreen") ? s.fullscreen : false,         // If true, Tommy will display suggestions fullscreen
             fullscreenIfMobile: e("fullscreenIfMobile") ? s.fullscreenIfMobile : true,  // If true, Tommy will display full screen, but only on mobile
             emptyText: e("emptyText") ? s.emptyText : undefined,        // Text to display when Tommy couldn't make a suggestion
             emptyHTML: e("emptyHTML") ? s.emptyHTML : undefined,        // Function that generates HTML to display when no suggestion was found
             speechEnabled: e("speechEnabled") ? s.speechEnabled : true, // Allow the user to use Tommy through speech
             textEnabled: e("textEnabled") ? s.textEnabled : true,       // Allow the user to use Tommy through text
-            direction: e("direction") ? s.direction : "bottom end",     // Define the direction that Tommy should display the box of suggestions
+            position: e("position") ? s.position : "bottom end",        // Define the position that Tommy should display the box of suggestions
             feelingLucky: e("feelingLucky") ? s.feelingLucky : false,   // If true, will redirect to the highest-relevance link when done listening
             strictGrammar: e("strictGrammar") ? s.strictGrammar : true, // If true, only words in the definitions will be considered
         }
@@ -295,7 +294,7 @@ function volumeAudioProcess( event ) {
         }
         
         tommy.speechService.onaudioend = function(event) {
-            tommy.speechService.onresult({results: [[{transcript: "This is a contact test"}]]})
+            //tommy.speechService.onresult({results: [[{transcript: "This is a contact test"}]]})
             tommy.fabIcon.style.color = tommy.settings.iconColor
         }
         
