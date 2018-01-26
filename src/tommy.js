@@ -162,8 +162,9 @@ function volumeAudioProcess( event ) {
         _positionTommy()
         _buildTommyHTML()
         _buildVolumeListener()
+        _reapplySettings()
         
-        if (tommy.settings.debug) console.log("Tommy setup finished")
+        d("Tommy setup finished")
         
     }
     
@@ -180,7 +181,12 @@ function volumeAudioProcess( event ) {
     }
     
     Tommy.prototype.listen = function(timeLimit) {
-        if (tommy.settings.debug) console.log("Starting listening process")
+        d("Starting listening process")
+        
+        // First, execute the preClick if given
+        if (tommy.settings.preClick) {
+            tommy.settings.preClick()
+        }
         
         // Animations and such
         tommy.fabButton.classList.add("opened-button")
@@ -194,7 +200,7 @@ function volumeAudioProcess( event ) {
     Tommy.prototype.deafen = function(timeDelay) {
         //tommy.fabButton.classList.remove("opened-button")
         tommy.fabButton.onclick = tommy.listen
-        if (tommy.settings.debug) console.log("Stopping listening process")
+        d("Stopping listening process")
         tommy.speechService.stop()
         tommy.listening = false
     }
@@ -210,12 +216,15 @@ function volumeAudioProcess( event ) {
     
     // Private methods ----------------------------------------------------------------------------
     
+    function _isMobile() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    }
     
     function _fillInDefaultSettings() {
         
         // Define small variable names for use in this JS objects
         var s = tommy.settings
-        var e = function(key) {!("undefined" === typeof(tommy.settings[key]))}
+        var e = function(key) {return !("undefined" === typeof(tommy.settings[key]))}
         var newSettings = {
             buttonColor: e("buttonColor") ? s.buttonColor : "#3F51B5",  // Color of the Tommy Button
             iconColor: e("iconColor") ? s.iconColor : "#FFFFFF",        // Color of the Tommy Icon
@@ -223,7 +232,7 @@ function volumeAudioProcess( event ) {
             visualizerColor: e("visualizerColor") ? s.visualizerColor : "#7986CB", // Color of the audio volume visualizer behind the Tommy icon when recording
             panelTitle: e("panelTitle") ? s.panelTitle : "Welcome to Tommy", // Title to show at the top of the Tommy suggestion panel
             font: e("font") ? s.font : "Open Sans",                     // Font family for Tommy
-            debug: e("debug") ? s.debug : true,                        // Console debugging for Tommy
+            debug: e("debug") ? s.debug : false,                        // Console debugging for Tommy
             disabled: e("disabled") ? s.disabled : false,               // Tommy is shown but not usable
             hidden: e("hidden") ? s.hidden : false,                     // Tommy is completely hidden
             preClick: e("preClick") ? s.preClick : undefined,           // Function that gets called first when Tommy is clicked
@@ -234,8 +243,10 @@ function volumeAudioProcess( event ) {
             speechEnabled: e("speechEnabled") ? s.speechEnabled : true, // Allow the user to use Tommy through speech
             textEnabled: e("textEnabled") ? s.textEnabled : true,       // Allow the user to use Tommy through text
             position: e("position") ? s.position : "bottom end",        // Define the position that Tommy should display the box of suggestions
+            preview: e("preview") ? s.preview : "Say what you are looking for", // Text to display as a preview before the user starts providing input.
+            previewFunction: e("previewFunction") ? s.previewFunction : undefined, // Function that returns a string to display as a preview before the user starts providing input.
             feelingLucky: e("feelingLucky") ? s.feelingLucky : false,   // If true, will redirect to the highest-relevance link when done listening
-            strictGrammar: e("strictGrammar") ? s.strictGrammar : true, // If true, only words in the definitions will be considered
+            algorithm: e("algorithm") ? s.algorithm : "inclusive_one",             // A string representing which algorithm to use. See more details on this in the algorithm section
         }
         tommy.settings = newSettings
         
@@ -261,7 +272,6 @@ function volumeAudioProcess( event ) {
             if (useDescription && def.description) keywords = keywords.concat(def.description.split(" "))
             keywords = Array.from(new Set(keywords))
             
-            console.error(keywords)
             for (var j = 0; j < keywords.length; j++) {
                 var keyword = keywords[j].toLowerCase()
                 if(!tommy.internalDefinitionMapping[keyword]) tommy.internalDefinitionMapping[keyword] = []
@@ -270,12 +280,13 @@ function volumeAudioProcess( event ) {
             
         }
         
-        if (tommy.settings.debug) console.log("Definition configuration finished")
-        if (tommy.settings.debug) console.log(tommy.internalDefinitionMapping)
+        d("Definition configuration finished")
+        d(tommy.internalDefinitionMapping)
         
     }
     
     function _buildSpeechRecognition() {
+        
         tommy.speechService = new (window.SpeechRecognition || 
                                    window.webkitSpeechRecognition || 
                                    window.mozSpeechRecognition || 
@@ -300,7 +311,6 @@ function volumeAudioProcess( event ) {
         
         // Attach listeners for speech
         tommy.speechService.onresult = function(event) {
-            console.log("Result")
             tommy.spokenPreview.style.fontStyle = "normal"
             tommy.spokenPreview.innerHTML = event.results[0][0].transcript
             tommy.current.payload = event.results[0][0].transcript
@@ -323,8 +333,6 @@ function volumeAudioProcess( event ) {
     
     // Donation from https://github.com/cwilso/volume-meter/blob/master/main.js
     function _buildVolumeListener() {
-        
-        console.log(tommy.settings.debug)
         
         // monkeypatch Web Audio
         window.AudioContext = window.AudioContext || window.webkitAudioContext
@@ -353,19 +361,19 @@ function volumeAudioProcess( event ) {
                     "optional": []
                 },
             }, _gotStream, _didntGetStream)
-        } catch (e) {
-            if (tommy.settings.debug) console.error("Audio volume not available")
+        } catch (err) {
+            e("Audio volume not available")
         }
         
     }
     
     function _didntGetStream() {
-        if (tommy.settings.debug) console.error("Audio volume not available")
+        e("Audio volume not available")
     }
 
     function _gotStream(stream) {
         
-        if (tommy.settings.debug) console.log("Audio volume available")
+        d("Audio volume available")
         
         // Create an AudioNode from the stream.
         tommy.mediaStreamSource = tommy.audioContext.createMediaStreamSource(stream);
@@ -431,7 +439,6 @@ function volumeAudioProcess( event ) {
         tommy.container.style.right = '0'
         tommy.container.style.marginBottom = '16px'
         tommy.container.style.marginRight = '16px'
-        tommy.container.style.fontFamily = tommy.settings.font
     }
     
     function _buildTommyHTML() {
@@ -453,12 +460,16 @@ function volumeAudioProcess( event ) {
         tommy.visualizer.id = "tommy-main-button-visualizer"
         tommy.visualizer.width = 50
         tommy.visualizer.height = 50
-        tommy.fabButton.style.background = tommy.settings.buttonColor
-        tommy.fabIcon.style.color = tommy.settings.iconColor
-        tommy.fabButton.onclick = tommy.listen;
         container.appendChild(tommy.fabButton)
         tommy.fabButton.appendChild(tommy.visualizer)
         tommy.fabButton.appendChild(tommy.fabIcon)
+        
+        // Attach a tooltip, but initially hide it
+        tommy.fabTooltip = document.createElement("span")
+        tommy.fabTooltip.id = "fab-tooltip"
+        tommy.fabTooltip.classList.add("tooltiptext")
+        tommy.fabTooltip.classList.add("noselect")
+        tommy.fabButton.appendChild(tommy.fabTooltip)
         
         // Have the stop button appear when moving over the icon
         /*tommy.fabButton.addEventListener("mouseenter", function(event) {
@@ -489,7 +500,6 @@ function volumeAudioProcess( event ) {
         tommy.resultPanelTop.id = "result-panel-top"
         tommy.resultPanelTopTitle = document.createElement("span")
         tommy.resultPanelTopTitle.id = "result-panel-top-title"
-        tommy.resultPanelTopTitle.innerHTML = tommy.settings.panelTitle
         tommy.resultPanelCloseIcon = document.createElement("i")
         tommy.resultPanelCloseIcon.className = "material-icons noselect"
         tommy.resultPanelCloseIcon.innerHTML = '&#xE5CD;'
@@ -506,6 +516,49 @@ function volumeAudioProcess( event ) {
         tommy.resultPanel.appendChild(tommy.resultPanelSuggestions)
         
         container.appendChild(tommy.resultPanel)
+        
+    }
+    
+    function _reapplySettings() {
+        
+        // First apply the button color
+        tommy.fabButton.style.background = tommy.settings.buttonColor
+        
+        // Then the icon color
+        if (!tommy.listening) tommy.fabIcon.style.color = tommy.settings.iconColor
+        
+        // Then the recording color
+        if (tommy.listening) tommy.fabIcon.style.color = tommy.settings.iconRecordingColor
+        
+        // Visualizer gets filled automatically each time, so we don't need to initially set anything
+        
+        // Then the panel title
+        tommy.resultPanelTopTitle.innerHTML = tommy.settings.panelTitle
+        
+        // Then the font
+        tommy.container.style.fontFamily = tommy.settings.font
+        
+        // Disabled / enable Tommy
+        // TODO: Remove hover effect when disabled
+        // TODO: Properly position the Tooltip
+        if (tommy.settings.disabled) {
+            tommy.fabButton.classList.add("tooltip")
+            tommy.fabButton.style.cursor = "default"
+            tommy.fabTooltip.innerHTML = "Tommy is disabled"
+            tommy.fabButton.onclick = function() {}
+        } else {
+            tommy.fabButton.classList.remove("tooltip")
+            tommy.fabButton.style.cursor = "pointer"
+            tommy.fabTooltip.innerHTML = ""
+            tommy.fabButton.onclick = tommy.listen;
+        }
+        
+        if (tommy.settings.hidden) {
+            tommy.container.style.display = "none"
+        } else {
+            tommy.container.style.display = undefined
+        }
+        
         
         
     }
@@ -548,10 +601,6 @@ function volumeAudioProcess( event ) {
     
     function _displaySuggestions(indexedScores) {
         
-        console.log("Some results")
-        //tommy.resultPanel.style.maxHeight = "400px"
-        //tommy.resultPanel.style.height = null
-        tommy.resultPanel.style.height = "400px"
         tommy.resultPanel.style.visibility = "visible"
         tommy.resultPanelSuggestions.innerHTML = "" // Clearing all children
         
@@ -572,7 +621,6 @@ function volumeAudioProcess( event ) {
             suggestionDiv.appendChild(description)
             
             // Load element information
-            console.log(tommy.config)
             title.innerHTML = tommy.config[index].title
             description.innerHTML = tommy.config[index].description
             
@@ -581,10 +629,42 @@ function volumeAudioProcess( event ) {
             
         }
         
+        tommy.resultPanel.style.height = _calculateNeededHeight()
+        
     }
     
     function _displayNoResults() {
+        
+        d("No suggestions could be made; display no results result")
+        
+        var element = null
+        
+        if (tommy.settings.emptyHTML) {
+            element = tommy.settings.emptyHTML()
+        } else if (tommy.settings.emptyText) {
+            var textElement = document.createElement("p")
+            textElement.id = "no-results-text"
+            textElement.innerHTML = tommy.settings.emptyText
+            element = textElement
+        } else {
+            
+        }
+        
+        tommy.resultPanel.style.visibility = "visible"
+        tommy.resultPanelSuggestions.innerHTML = "" // Clearing all children
+        tommy.resultPanelSuggestions.appendChild(element)
+        tommy.resultPanel.style.height = _calculateNeededHeight()
+        
         console.log("No results")
+    }
+    
+    function _calculateNeededHeight() {
+        
+        console.log(tommy.resultPanelTop.offsetHeight)
+        console.log(tommy.resultPanelSuggestions.offsetHeight)
+        var height = tommy.resultPanelTop.offsetHeight + tommy.resultPanelSuggestions.offsetHeight + 16
+        return height + "px"
+        
     }
     
     // HTML Definitions ---------------------------------------------------------------------------
@@ -592,6 +672,16 @@ function volumeAudioProcess( event ) {
     var TommyContainer = document.registerElement('tommy-container', {
         prototype: Object.create(HTMLElement.prototype)
     });
+        
+    // Library development methods ----------------------------------------------------------------
+        
+    function d(message) {
+        if (tommy.settings.debug) console.log(message)
+    }
+        
+    function e(message) {
+        if (tommy.settings.debug) console.error(message)
+    }
 
     // Module wrapper -----------------------------------------------------------------------------
     

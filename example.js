@@ -83,13 +83,13 @@ function setupTommy() {
         },
     ]
     
-    var t = Tommy('tommy', definitions, {debug: true})
+    var t = Tommy('tommy', definitions, {emptyText: "No results found!", debug: true})
     
     // Get the context that led to this page (null if Tommy didn't get to this page)
     var context = t.context
-    console.log(context.payload)    // The full speech string used to reach this page
-    console.log(context.previous)   // The path that the user came from
-    console.log(context.timeSpent)  // Time spent using Tommy in the last page
+    //console.log(context.payload)    // The full speech string used to reach this page
+    //console.log(context.previous)   // The path that the user came from
+    //console.log(context.timeSpent)  // Time spent using Tommy in the last page
     
     // Open Tommy programmatically on your own
     //t.open()
@@ -109,8 +109,8 @@ function setupTommy() {
     // Retrieve the current suggestions and current payload
     var current = t.current.suggestions;
     var payload = t.current.payload;
-    console.log(current)
-    console.log(payload)
+    //console.log(current)
+    //console.log(payload)
     
     // Show some basic properties of Tommy
     console.log(t.version)
