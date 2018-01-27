@@ -246,7 +246,8 @@ function volumeAudioProcess( event ) {
             preview: e("preview") ? s.preview : "Say what you are looking for", // Text to display as a preview before the user starts providing input.
             previewFunction: e("previewFunction") ? s.previewFunction : undefined, // Function that returns a string to display as a preview before the user starts providing input.
             feelingLucky: e("feelingLucky") ? s.feelingLucky : false,   // If true, will redirect to the highest-relevance link when done listening
-            algorithm: e("algorithm") ? s.algorithm : "inclusive_one",             // A string representing which algorithm to use. See more details on this in the algorithm section
+            algorithm: e("algorithm") ? s.algorithm : "inclusive_one",  // A string representing which algorithm to use. See more details on this in the algorithm section (note that this is not currently in use)
+            tail: e("tail") ? s.tail : []                               // A list of definitions to append to the end of the suggestion list (follows same spec as config object)
         }
         tommy.settings = newSettings
         
@@ -254,9 +255,66 @@ function volumeAudioProcess( event ) {
     
     function _processConfiguration() {
         
+        // First, validate each config (including any `tail` from settings)
+        _validateConfiguration()
+        
         // Since we may have multiple algorithms / iterations of algos, choose which
         // one to use here
         _algoAlpha(true, true)
+        
+    }
+    
+    /**
+     * Validate each object in config (including any `tail` from settings)
+     */
+    function _validateConfiguration() {
+        
+        /*{
+            path: "/index.html",                // The path destination when Tommy is clicked
+            keywords: "home tommy homepage",    // The speech keywords that cause Tommy to show up
+            title: "Home Page",                 // The title for this suggestion
+            description: "Home page for Tommy", // The description for the suggestion
+            icon: "img/star.png",               // The icon for the the suggestion
+            titleFunction: undefined,           // Instead, generate title from a function (given payload)
+            descriptionFunction: undefined,     // Instead, generate description from a function (given payload)
+            iconFunction: undefined,            // Instead, generate icon from a function (given payload)
+            displayHTML: undefined,             // Instead, generate the entire suggestion HTML
+        }*/
+        
+        var errorOccurred = false
+        var checker = function(def, index, from) {
+            
+            var error = null
+            if (!(def.title || def.titleFunction)) {
+                error = "a title or titleFunction must be provided."
+            } else if (!(typeof def.titleFunction === "function" || def.titleFunction == undefined)) {
+                error = "titleFunction must be a function or undefined."
+            } else if (!(typeof def.descriptionFunction === "function" || def.descriptionFunction == undefined)) {
+                error = "iconFunction must be a function or undefined."
+            } else if (!(typeof def.iconFunction === "function" || def.iconFunction == undefined)) {
+                error = "iconFunction must be a function or undefined."
+            } else if (!(typeof def.displayHTML === "function" || def.displayHTML == undefined)) {
+                error = "displayHTML must be a function or undefined."
+            }
+            
+            if (error) {
+                console.error(new TypeError("Error within " + from + " at index " + index + ", " + error))
+                errorOccurred = true
+            }
+            
+        }
+        
+        for (var i = 0; i < tommy.config.length; i++) {
+            checker(tommy.config[i], i, "config")
+        }
+        for (var i = 0; i < tommy.settings.tail.length; i++) {
+            checker(tommy.settings.tail[i], i, "settings.tail")
+        }
+        
+        if (errorOccurred) {
+            console.error("An error has occurred in your configuration; Tommy will continue to run, but unexpected behavior may occur!")
+        }
+        
         
     }
     
@@ -299,7 +357,15 @@ function volumeAudioProcess( event ) {
         
         tommy.speechService.onaudiostart = function(event) {
             tommy.spokenPreview.style.fontStyle = "italic"
-            tommy.spokenPreview.innerHTML = "Say what you are looking for"
+            
+            // Generate preview
+            var preview = "Say what you are looking for"
+            if (tommy.settings.previewFunction) {
+                preview = tommy.settings.previewFunction()
+            } else if (!(tommy.settings.preview === undefined)) {
+                preview = tommy.settings.preview
+            }
+            tommy.spokenPreview.innerHTML = preview
             // Set the record color
             tommy.fabIcon.style.color = tommy.settings.iconRecordingColor
         }
@@ -307,6 +373,12 @@ function volumeAudioProcess( event ) {
         tommy.speechService.onaudioend = function(event) {
             //tommy.speechService.onresult({results: [[{transcript: "This is a contact test"}]]})
             tommy.fabIcon.style.color = tommy.settings.iconColor
+            
+            // If feeling lucky, first result is accessed
+            if (tommy.settings.feelingLucky && tommy.current.suggestions[0]) {
+                _moveToSuggestion(tommy.current.suggestions[0])
+            }
+            
         }
         
         // Attach listeners for speech
@@ -606,26 +678,63 @@ function volumeAudioProcess( event ) {
         
         // For each scored item, display HTML for that page
         var indices = Object.keys(indexedScores).sort(function(a, b) {return indexedScores[a] - indexedScores[b]})
+        
+        // If a `tail` is given in settings, make sure to add those to the end
+        if (tommy.settings.tail.length > 0) {
+            indices.push(-1)
+            for (var i = 0; i < tommy.settings.tail.length; i++) {
+                indices.push(i)
+            }
+        }
+        tommy.current.suggestions = []
+        var nowOnTail = false
+        console.log(indices)
         for (var i = 0; i < indices.length; i++) {
             
             var index = parseInt(indices[i])
             
+            // Save suggestions
+            if (index < 0) {
+                nowOnTail = true
+                continue
+            }
+            var def = nowOnTail ? tommy.settings.tail[index] : tommy.config[index]
+            tommy.current.suggestions.push(def)
+            
             // Create elements
-            var suggestionDiv = document.createElement("div")
-            suggestionDiv.classList.add("suggestion-item")
-            var title = document.createElement("p")
-            title.classList.add("suggestion-title")
-            var description = document.createElement("p")
-            description.classList.add("suggestion-description")
-            suggestionDiv.appendChild(title)
-            suggestionDiv.appendChild(description)
+            if (def.displayHTML) {
+                var suggestionHTML = def.displayHTML()
+                tommy.resultPanelSuggestions.appendChild(suggestionHTML)
+            } else {
+                var suggestionDiv = document.createElement("div")
+                suggestionDiv.classList.add("suggestion-item")
+                var title = document.createElement("p")
+                title.classList.add("suggestion-title")
+                var description = document.createElement("p")
+                description.classList.add("suggestion-description")
+
+                // Load element information
+                if (def.titleFunction) {
+                    title.innerHTML = def.titleFunction()
+                    suggestionDiv.appendChild(title)
+                } else if (def.title) {
+                    title.innerHTML = def.title
+                    suggestionDiv.appendChild(title)
+                }
+                
+                if (def.descriptionFunction) {
+                    description.innerHTML = def.descriptionFunction()
+                    suggestionDiv.appendChild(description)
+                } else if (def.description) {
+                    description.innerHTML = def.description
+                    suggestionDiv.appendChild(description)
+                }
+
+                // Attach to the panel
+                suggestionDiv.onclick = _moveToSuggestion.bind(null, def)
+                tommy.resultPanelSuggestions.appendChild(suggestionDiv)
+            }
             
-            // Load element information
-            title.innerHTML = tommy.config[index].title
-            description.innerHTML = tommy.config[index].description
-            
-            // Attach to the panel
-            tommy.resultPanelSuggestions.appendChild(suggestionDiv)
             
         }
         
@@ -647,7 +756,11 @@ function volumeAudioProcess( event ) {
             textElement.innerHTML = tommy.settings.emptyText
             element = textElement
         } else {
-            
+            var textElement = document.createElement("p")
+            textElement.id = "no-results-text"
+            textElement.innerHTML = "No result found"
+            element = textElement
+            // TODO: Add graphic
         }
         
         tommy.resultPanel.style.visibility = "visible"
@@ -655,15 +768,24 @@ function volumeAudioProcess( event ) {
         tommy.resultPanelSuggestions.appendChild(element)
         tommy.resultPanel.style.height = _calculateNeededHeight()
         
-        console.log("No results")
     }
     
     function _calculateNeededHeight() {
         
-        console.log(tommy.resultPanelTop.offsetHeight)
-        console.log(tommy.resultPanelSuggestions.offsetHeight)
         var height = tommy.resultPanelTop.offsetHeight + tommy.resultPanelSuggestions.offsetHeight + 16
         return height + "px"
+        
+    }
+    
+    function _moveToSuggestion(definition) {
+        
+        // Check for `clickFunction`, then `path`
+        
+        if (definition.clickFunction) {
+            definition.clickFunction()
+        } else if (definition.path) {
+            window.location.href = definition.path
+        }
         
     }
     

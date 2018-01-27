@@ -23,67 +23,24 @@ function setupTommy() {
             descriptionFunction: undefined,     // Instead, generate description from a function (given payload)
             iconFunction: undefined,            // Instead, generate icon from a function (given payload)
             displayHTML: undefined,             // Instead, generate the entire suggestion HTML
-            relevance: undefined                // A function that given a payload, returns the relevance (0-1) of a suggestion for this entry
         },
         {
             path: "/contacts.html",
             keywords: "contacts contact email phone team",
-            title: "Contact Us",
             description: "View contact information for the Tommy project",
-            icon: "img/contact.png"
-        },
-        {
-            path: "/contacts.html",
-            keywords: "contacts contact email phone team",
-            title: "Contact Us",
-            description: "View contact information for the Tommy project",
-            icon: "img/contact.png"
-        },
-        {
-            path: "/contacts.html",
-            keywords: "contacts contact email phone team",
-            title: "Contact Us",
-            description: "View contact information for the Tommy project",
-            icon: "img/contact.png"
-        },
-        {
-            path: "/contacts.html",
-            keywords: "contacts contact email phone team",
-            title: "Contact Us",
-            description: "View contact information for the Tommy project",
-            icon: "img/contact.png"
-        },
-        {
-            path: "/contacts.html",
-            keywords: "contacts contact email phone team",
-            title: "Contact Us",
-            description: "View contact information for the Tommy project",
-            icon: "img/contact.png"
-        },
-        {
-            path: "/contacts.html",
-            keywords: "contacts contact email phone team",
-            title: "Contact Us",
-            description: "View contact information for the Tommy project",
-            icon: "img/contact.png"
-        },
-        {
-            path: "/contacts.html",
-            keywords: "contacts contact email phone team",
-            title: "Contact Us",
-            description: "View contact information for the Tommy project",
-            icon: "img/contact.png"
-        },
-        {
-            path: "/contacts.html",
-            keywords: "contacts contact email phone team",
-            title: "Contact Us",
-            description: "View contact information for the Tommy project",
-            icon: "img/contact.png"
-        },
+        }
     ]
     
-    var t = Tommy('tommy', definitions, {emptyText: "No results found!", debug: true})
+    var tail = [
+        {
+            path: "http://vontech.org",
+            keywords: "vontech",
+            title: "Visit vontech.org",
+            description: "Want to learn more about this project? Visit vontech.org!",
+        }
+    ]
+    
+    var t = Tommy('tommy', definitions, {debug: true, feelingLucky: false, tail: tail})
     
     // Get the context that led to this page (null if Tommy didn't get to this page)
     var context = t.context
