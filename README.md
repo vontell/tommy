@@ -2,6 +2,8 @@
 
 Tommy is a pure JavaScript-based speech navigation system for websites. It focuses on providing easy page-to-page speech navigation in a highly-readable way.
 
+*Check out a live demo [here](https://vontell.github.io/tommy/)!*
+
 <br />
 <div style="width: 100%; text-align: center">
   <img src="https://raw.githubusercontent.com/vontell/tommy/gh-pages/images/preview.gif"/>
