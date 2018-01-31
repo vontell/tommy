@@ -161,7 +161,7 @@ function volumeAudioProcess( event ) {
 
         _positionTommy()
         _buildTommyHTML()
-        _buildVolumeListener()
+        if (location.protocol !== "https:") _buildVolumeListener()
         _reapplySettings()
         
         d("Tommy setup finished")
