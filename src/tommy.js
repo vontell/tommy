@@ -666,8 +666,8 @@ function volumeAudioProcess( event ) {
     
     function _removeArticlesAndTrivialWords(list) {
         
-        let arr = ['the', 'of', 'for', 'a', 'and', 'to'];
-        return list.filter(e => !arr.includes(e));
+        var arr = ['the', 'of', 'for', 'a', 'and', 'to']
+        return list.filter(e => !arr.includes(e))
         
     }
     
