@@ -460,26 +460,30 @@ function volumeAudioProcess( event ) {
     
     function _drawAudioVisualizer() {
         
-        // clear the background
-        var ctx = tommy.visualizer.getContext("2d")
-        ctx.clearRect(0,0,tommy.visualizer.width,tommy.visualizer.height);
-        
-        if (tommy.listening) {
+        if (location.protocol !== "https:") {
+            
+            // clear the background
+            var ctx = tommy.visualizer.getContext("2d")
+            ctx.clearRect(0,0,tommy.visualizer.width,tommy.visualizer.height);
 
-            // check if we're currently clipping
-            ctx.fillStyle = tommy.settings.visualizerColor;
+            if (tommy.listening) {
 
-            // draw a bar based on the current volume
-            ctx.beginPath();
-            var volume = tommy.meter.volume < 0.01 ? 0 : tommy.meter.volume
-            var distance = Math.min(volume/0.002, 23)
-            ctx.arc(25, 25, distance, 0, 2 * Math.PI);
-            ctx.fill();
+                // check if we're currently clipping
+                ctx.fillStyle = tommy.settings.visualizerColor;
+
+                // draw a bar based on the current volume
+                ctx.beginPath();
+                var volume = tommy.meter.volume < 0.01 ? 0 : tommy.meter.volume
+                var distance = Math.min(volume/0.002, 23)
+                ctx.arc(25, 25, distance, 0, 2 * Math.PI);
+                ctx.fill();
+
+            }
+
+            // set up the next visual callback
+            tommy.rafID = window.requestAnimationFrame( _drawAudioVisualizer );
             
         }
-        
-        // set up the next visual callback
-        tommy.rafID = window.requestAnimationFrame( _drawAudioVisualizer );
         
     }
     
