@@ -161,7 +161,7 @@ function volumeAudioProcess( event ) {
 
         _positionTommy()
         _buildTommyHTML()
-        if (location.protocol !== "https:") _buildVolumeListener()
+        if (location.protocol == "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1") _buildVolumeListener()
         _reapplySettings()
         
         d("Tommy setup finished")
@@ -460,7 +460,7 @@ function volumeAudioProcess( event ) {
     
     function _drawAudioVisualizer() {
         
-        if (location.protocol !== "https:") {
+        if (location.protocol == "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1") {
             
             // clear the background
             var ctx = tommy.visualizer.getContext("2d")
